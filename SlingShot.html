@@ -12,7 +12,7 @@
 
 <body style="background-color:grey">
 
-<canvas id="myCanvas" width="1800" height="800"></canvas>
+<canvas id="myCanvas" width="800" height="800"></canvas>
 
 <script>
     var canvas = document.getElementById("myCanvas");
@@ -48,25 +48,7 @@
     function drawLives() {
         drawText("Lives: "+lives, posTextUpperRight)
     }
-    
-    var brickRowCount = 9;
-    var brickColumnCount = 3;
-    var brickWidth = 75;
-    var brickHeight = 20;
-    var brickPadding = 10;
-    var brickOffsetTop = 30;
-    var brickOffsetLeft = 30;
-    
-    var bricks = [];
-    for(c=0; c<brickColumnCount; c++) {
-        bricks[c] = [];
-        for(r=0; r<brickRowCount; r++) { // initialize brick position
-            bricks[c][r] = {status: 1,
-                            posVec: new Vector(( r * ( brickWidth  + brickPadding ) ) + brickOffsetLeft,
-                                               ( c * ( brickHeight + brickPadding ) ) + brickOffsetTop ) 
-                           };
-        }
-    }
+
 
 // charles - humble beginning
     
@@ -192,9 +174,9 @@
     pushNode();
     
 // physics
-var spring_constant = 25;
-var spring_length = 50;
-var charge_constant = 100;
+    var spring_constant = 25;
+    var spring_length = 50;
+    var charge_constant = 100;
 
 /*    
 function applyChargeForceNode(node1, node2){
@@ -221,20 +203,14 @@ function applyForceNode(force, node){
     node.x += force;
 }
 function applyForceTree(){
-    //ygg[1].x +=1;
-    /*
-    for(var i = 0; i< ygg.length; i++){
-        applyForceNode(1, ygg[i]);
-    }
-    */
+
     for(var i = 0; i< ygg.length-1; i++){
         applySpringForceNode(ygg[i], ygg[i+1]);
-        //applyChargeForceNode(ygg[i], ygg[i+1]);
+
     }
 }
     
-// 3 body game code
-    
+// 3 body 
     var Sun = {
         mass: 5000,
         rad: 30,
@@ -242,43 +218,57 @@ function applyForceTree(){
         speed: new Vector(0, -0.1)
     };
 
-    function drawStar(astroObj){
-        ctx.beginPath();
-        ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
-        ctx.fillStyle = "rgb(255, 249, 107)";
-        ctx.fill();
-        ctx.closePath();
-    }
-    
     var Earth = {
         mass: 100,
         rad: 15,
         pos: new Vector(myCanvas.width/2+200, myCanvas.height/2),
         speed: new Vector(0, 6)
-    };
-    
-    function drawEarth(astroObj){
-        ctx.beginPath();
-        ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
-        ctx.fillStyle = "rgb(90, 135, 255)";
-        ctx.fill();
-        ctx.closePath();
-    }
-    
+    };    
+
     var Moon = {
         mass: 50,
         rad: 8,
         pos: new Vector(myCanvas.width/2+230, myCanvas.height/2),
         speed: new Vector(0, 6.1)
     };
+
+    solarSystem = [Sun, Earth, Moon];
     
-    function drawMoon(astroObj){
-        ctx.beginPath();
-        ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
-        ctx.fillStyle = "rgb(160, 142, 142)";
-        ctx.fill();
-        ctx.closePath();
+// Draw a single object in the Solar System
+    function drawObj(astroObj) {
+        if (astroObj.mass < 100) {
+            drawMoon(astroObj);
+        } else if (astroObj.mass >= 100 && astroObj.mass < 1000) {
+            drawEarth(astroObj);
+        } else  {
+            drawStar(astroObj);
+        }
+
+            function drawStar(astroObj){
+                ctx.beginPath();
+                ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
+                ctx.fillStyle = "rgb(255, 249, 107)";
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            function drawEarth(astroObj){
+                ctx.beginPath();
+                ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
+                ctx.fillStyle = "rgb(90, 135, 255)";
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            function drawMoon(astroObj){
+                ctx.beginPath();
+                ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
+                ctx.fillStyle = "rgb(160, 142, 142)";
+                ctx.fill();
+                ctx.closePath();
+            }
     }
+
     
 // Graphics
     function drawRect(posVector, width, height){
@@ -324,23 +314,11 @@ function applyForceTree(){
         }
     }
 
-    function drawBricks() {
-        for(c=0; c<brickColumnCount; c++) {
-            for(r=0; r<brickRowCount; r++) {
-                if(bricks[c][r].status == 1) {
-                    drawRect(bricks[c][r].posVec, brickWidth, brickHeight);
-                }
-            }
-        }
-    }
-
     function drawPaddle() {
         drawRect(paddlePosVec, paddleWidth, paddleHeight);
         drawRect(paddle2PosVec, paddle2Width, paddle2Height);
     }
-// Physics
-    
-    
+
     function movePaddle() {
         if(rightPressed && paddlePosVec.x < canvas.width-paddleWidth) {
           paddlePosVec.x += 7;
@@ -348,72 +326,23 @@ function applyForceTree(){
           paddlePosVec.x -= 7;
         }
     }
-    function brickCollision() {
-        for(c=0; c<brickColumnCount; c++) {
-            for(r=0; r<brickRowCount; r++) {
-                var b = bricks[c][r];
-                if(b.status == 1 && //brick exist
-                   ballPos.x > b.posVec.x && ballPos.x < b.posVec.x + brickWidth && 
-                   ballPos.y > b.posVec.y && ballPos.y < b.posVec.y + brickHeight) { // hit brick
-                    ballSpeed.flipY();
-                    b.status = 0; // remove brick
-                    score++;
-                    if(score == brickRowCount*brickColumnCount) {
-                        // alert("Win!");
-                        document.location.reload();
-                    }
-                }
-            }
-        }
-    }
 
-    function ballPhysics() {  // Collision detection and update frame
-        if(ballPos.x + ballSpeed.x < ballRadius || // left wall
-           ballPos.x + ballSpeed.x > canvas.width-ballRadius) { // right wall
-            ballSpeed.flipX(); // horzontal bounce
-        }
-
-        if(ballPos.y + ballSpeed.y < ballRadius || // top wall
-           ballPos.y + ballSpeed.y > canvas.height-ballRadius) { // bottom wall
-            ballSpeed.flipY(); // vertical bounce
-        }
-        
-        // move ball to next frame
-        ballPos.add(ballSpeed)
-  }
-    
-    
+// Physics    
     function astroPhysics(astroObj) {  // Collision detection and update frame
         
+        // Bounce off walls
         if(astroObj.pos.x + astroObj.speed.x < astroObj.rad || // left wall
            astroObj.pos.x + astroObj.speed.x > canvas.width-astroObj.rad) { // right wall
             astroObj.speed.flipX(); // horzontal bounce
         }
-
         if(astroObj.pos.y + astroObj.speed.y < astroObj.rad || // top wall
            astroObj.pos.y + astroObj.speed.y > canvas.height-astroObj.rad) { // bottom wall
             astroObj.speed.flipY(); // vertical bounce
         }
-        
-        
+
         // move astroObj to next frame
         astroObj.pos.add(astroObj.speed);
   }
-    
-/*
-  function shipDestory(){
-        lives--;
-        if(!lives) {
-        // alert("GAME OVER");
-            document.location.reload();
-        } else { // serve ball from middle
-            ballPos.set(canvas.width/2, canvas.height-30);
-            ballSpeed.set(2,-2);
-            paddlePosVec.x = (canvas.width-paddleWidth)/2; // reset padel to center
-        }
-
-  }
-*/
 
 /*******                Event Listerners                     ******/
     document.addEventListener("keypress", keyPressHandler, false);
@@ -495,14 +424,12 @@ function applyForceTree(){
     
 /****************   Game Loop   *****************/
     function drawAll(){
-        clearCanvas();
-        
-        ballPhysics(); 
-        
-        drawStar(Sun);
-        drawEarth(Earth);
-        drawMoon(Moon);
-        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for(var i=0; i< solarSystem.length; i++){
+            drawObj(solarSystem[i]);
+        }
+
         
         applyGravity(Sun, Earth);
         applyGravity(Earth, Moon);
@@ -515,10 +442,7 @@ function applyForceTree(){
         drawTree(); // real
         applyForceTree(); // real
         
-        drawPaddle();
-		drawBricks();
-		
-		brickCollision();
+        drawPaddle(); // test mouse for now
         movePaddle();
         
         drawLives();
