@@ -231,8 +231,31 @@ function applyForceTree(){
         pos: new Vector(myCanvas.width/2+230, myCanvas.height/2),
         speed: new Vector(0, 6.1)
     };
-
-    solarSystem = [Sun, Earth, Moon];
+/* // need to figure out closure    
+    function newRock(){
+    var Rock = {
+        mass: 500,
+        rad: 20,
+        pos: new Vector(myCanvas.width/2+230, myCanvas.height/2),
+        speed: new Vector(0, 6.1)
+    };
+        return Rock;
+    }
+    function newObj(){
+        this.mass = 20000;
+        this.rad = 25;
+        this.pos = new Vector(myCanvas.width/2+240, myCanvas.height/2);
+        this.speed = new Vector(0, 11);
+        return this;
+    };
+*/
+    //solarSystem = [Sun, Earth, Moon];
+    solarSystem = [];
+    //solarSystem.push(new newRock());
+    //solarSystem.push(new newRock());
+    solarSystem.push(Earth);
+    solarSystem.push(Moon);
+    solarSystem.push(Sun);
     
 // Draw a single object in the Solar System
     function drawObj(astroObj) {
@@ -278,22 +301,7 @@ function applyForceTree(){
         ctx.fill();
         ctx.closePath();
     }
-    
-    var gravationalConstant = 0.01;
-    
-    function applyGravity(astroBody1, astroBody2){
-        var numerator1 = gravationalConstant * astroBody2.mass;
-        var numerator2 = gravationalConstant * astroBody1.mass;
-        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
-        var absDisSquared = (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
-        var acc1 = new Vector(numerator1*distanceVec.x/(absDisSquared+1), numerator1*distanceVec.y/(absDisSquared+1));
-        var acc2 = new Vector(numerator2*distanceVec.x/(absDisSquared+1), numerator2*distanceVec.y/(absDisSquared+1));
-        astroBody2.speed.add(acc2);
-        astroBody1.speed.add(negVector(acc1));
-    
-    }
 
-    
     function drawCircle(posVector){
         ctx.beginPath();
         ctx.arc(posVector.x, posVector.y, ballRadius, 0, Math.PI*2);
@@ -327,7 +335,21 @@ function applyForceTree(){
         }
     }
 
-// Physics    
+// Physics
+    var gravationalConstant = 0.01;
+    
+    function applyGravity(astroBody1, astroBody2){
+        var numerator1 = gravationalConstant * astroBody2.mass;
+        var numerator2 = gravationalConstant * astroBody1.mass;
+        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
+        var absDisSquared = (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
+        var acc1 = new Vector(numerator1*distanceVec.x/(absDisSquared+1), numerator1*distanceVec.y/(absDisSquared+1));
+        var acc2 = new Vector(numerator2*distanceVec.x/(absDisSquared+1), numerator2*distanceVec.y/(absDisSquared+1));
+        astroBody2.speed.add(acc2);
+        astroBody1.speed.add(negVector(acc1));
+    
+    }
+    
     function astroPhysics(astroObj) {  // Collision detection and update frame
         
         // Bounce off walls
@@ -430,10 +452,12 @@ function applyForceTree(){
             drawObj(solarSystem[i]);
         }
 
-        
-        applyGravity(Sun, Earth);
-        applyGravity(Earth, Moon);
-        applyGravity(Sun, Moon);
+        for(var i=1; i< solarSystem.length; i++){ //O(N^2)
+            for(var j=0; j<i; j++){
+                applyGravity(solarSystem[j], solarSystem[i]);
+            }
+        }
+        //solarSystem[3].pos.x +1;
         
         astroPhysics(Sun);
         astroPhysics(Earth);
