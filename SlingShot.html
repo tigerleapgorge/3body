@@ -21,7 +21,9 @@
     var posTextUpperRight = new Vector(canvas.width-65, 20);
     var posTextUpperLeft = new Vector(8, 20);
     
-    var dt = 0.1;
+    //var dt = 0.1; // Delta Time
+    var deltaTime = 1;  // Time Step
+    var gravationalConstant = 0.001;
     
     var ballPos   = new Vector(myCanvas.width/2, myCanvas.height/2)
     var ballSpeed = new Vector(-1, 5)
@@ -348,7 +350,7 @@ function applyForceTree(){
     }
 
 // Physics
-    var gravationalConstant = 0.01;
+    
     
     function applyGravity(astroBody1, astroBody2){
         var numerator1 = gravationalConstant * astroBody2.mass;
@@ -357,14 +359,16 @@ function applyForceTree(){
         var absDisSquared = (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
         var acc1 = new Vector(numerator1*distanceVec.x/(absDisSquared+1), numerator1*distanceVec.y/(absDisSquared+1));
         var acc2 = new Vector(numerator2*distanceVec.x/(absDisSquared+1), numerator2*distanceVec.y/(absDisSquared+1));
-        astroBody2.speed.add(acc2);
-        astroBody1.speed.add(negVector(acc1));
+        
+        astroBody2.speed.add(acc2.new_mul(deltaTime) );
+        astroBody1.speed.add(negVector(acc1.new_mul(deltaTime)) );
     
     }
     
     function astroPhysics(astroObj) {  // Collision detection and update frame
         
         // Bounce off walls
+        /*
         if(astroObj.pos.x + astroObj.speed.x < astroObj.rad || // left wall
            astroObj.pos.x + astroObj.speed.x > canvas.width-astroObj.rad) { // right wall
             astroObj.speed.flipX(); // horzontal bounce
@@ -373,9 +377,26 @@ function applyForceTree(){
            astroObj.pos.y + astroObj.speed.y > canvas.height-astroObj.rad) { // bottom wall
             astroObj.speed.flipY(); // vertical bounce
         }
+        */
+
+        /*
+        // Astroid style - comes out of the other side
+        if(astroObj.pos.x < 0) { // left wall
+            astroObj.pos.x += canvas.width;
+        }
+        if(astroObj.pos.x > canvas.width) { // right wall
+            astroObj.pos.x -= canvas.width;
+        }
+        if(astroObj.pos.y < 0) { // top wall
+            astroObj.pos.y += canvas.height;
+        }
+        if(astroObj.pos.y > canvas.height) { // bottom wall
+            astroObj.pos.y -= canvas.height;
+        }
+        */
 
         // move astroObj to next frame
-        astroObj.pos.add( astroObj.speed.new_mul(dt) );
+        astroObj.pos.add( astroObj.speed.new_mul(deltaTime) );
   }
 
 /*******                Event Listerners                     ******/
@@ -481,10 +502,10 @@ function applyForceTree(){
         drawLives();
 		drawScore();
         
-		requestAnimationFrame(drawAll);
+		//requestAnimationFrame(drawAll);
     }
     
-// setInterval(drawAll, 160);  // run faster for debugging
+ setInterval(drawAll, 1);  // run faster for debugging
  drawAll();
 
 
