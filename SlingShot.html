@@ -375,6 +375,22 @@ function applyForceTree(){ // old
         astroBody1.speed.sub(acc1.new_mul(deltaTime));
     }
     
+    function applyAntiGravity(astroBody1, astroBody2){
+        // Formula: F1 = G (M1 M2) / (distance squared)
+        //          a1 = G    (M2) / (distance squared)
+        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
+        var distanceSquaredScalar= (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
+
+        var numerator1 = gravationalConstant * astroBody2.mass;
+        var numerator2 = gravationalConstant * astroBody1.mass;
+
+        var acc1 = distanceVec.new_mul(numerator1).new_div(distanceSquaredScalar+1);
+        var acc2 = distanceVec.new_mul(numerator2).new_div(distanceSquaredScalar+1);
+
+        astroBody2.speed.sub(acc2.new_mul(deltaTime));
+        astroBody1.speed.add(acc1.new_mul(deltaTime));
+    }
+    
     function applySpring(astroBody1, astroBody2){
         var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
         var disMag = Math.sqrt(distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
@@ -392,7 +408,8 @@ function applyForceTree(){ // old
     }
     
     function phyCollision(astroBody1, astroBody2) {  // Elastic collision between 2 balls
-
+        // For future reference
+        // http://www.gamasutra.com/view/feature/131424/pool_hall_lessons_fast_accurate_.php?page=3
         var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
         var disMag = Math.sqrt(distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
         var disVecNormalized = distanceVec.new_div(disMag);
@@ -520,7 +537,7 @@ function applyForceTree(){ // old
         
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
             for(var j=0; j<i; j++) {
-                applyGravity(solarSystem[j], solarSystem[i]);
+                applyAntiGravity(solarSystem[j], solarSystem[i]);
             }
         }
         
