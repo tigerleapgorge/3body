@@ -99,6 +99,15 @@
 		this.y = -this.y;
 	};
 
+	Vector.prototype.neg = function() {
+        this.x = -this.x;
+        this.y = -this.y;
+	};
+    
+	Vector.prototype.new_neg = function() {
+        return new Vector(-this.x,-this.y);
+	};
+    
 	Vector.prototype.mul = function(n) {
 		this.x = this.x * n;
         this.y = this.y * n;
@@ -122,8 +131,12 @@
 	};
 
     /******************************************/
-	Vector.prototype.GenMagnitude = function() {
+	Vector.prototype.rt_h = function() { // hypotenuse aka magnitude
 		return Math.sqrt(this.x*this.x + this.y*this.y);
+	};
+
+	Vector.prototype.rt_h_squared = function() {
+		return (this.x*this.x + this.y*this.y);
 	};
 
 	Vector.prototype.GenNormal = function() {
@@ -211,7 +224,7 @@ function applyForceTree(){ // old
 // 3 body 
     var Sun = {
         mass: 50000,
-        rad: 30,
+        rad: 20,
         pos: new Vector(myCanvas.width/2, myCanvas.height/2),
         speed: new Vector(0, 0)
     };
@@ -249,7 +262,7 @@ function applyForceTree(){ // old
     function newObj(){
         this.myType = "Atom";
         this.mass = 20;
-        this.rad = 25;
+        this.rad = 20;
         this.pos = new Vector(myCanvas.width/2+250, myCanvas.height/2);
         this.speed = new Vector(0, 11);
         return this;
@@ -260,8 +273,8 @@ function applyForceTree(){ // old
     solarSystem.push(Earth);
     solarSystem.push(Moon);
     solarSystem.push(Sun);
-    solarSystem.push(newRock());
-    solarSystem.push(newObj());
+    //solarSystem.push(newRock());
+    //solarSystem.push(newObj());
     
     // Draw a single object in the Solar System
     function drawObj(astroObj) {
@@ -365,6 +378,7 @@ function applyForceTree(){ // old
     function applySpring(astroBody1, astroBody2){
         var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
         var disMag = Math.sqrt(distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
+        var disVecNormalized = distanceVec.new_div(disMag);
         
         var springDelta = (spring_length - disMag) * 0.00001 ;
         
@@ -377,8 +391,25 @@ function applyForceTree(){ // old
         astroBody1.speed.add(acc);
     }
     
+    function phyCollision(astroBody1, astroBody2) {  // Elastic collision between 2 balls
+
+        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
+        var disMag = Math.sqrt(distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
+        var disVecNormalized = distanceVec.new_div(disMag);
+
+        if ( disMag < (astroBody1.rad + astroBody2.rad) ){ // 2 balls overlap
+            
+            new_speed_mag1 = astroBody2.speed.rt_h() * astroBody2.mass / astroBody1.mass;
+            new_speed_mag2 = astroBody1.speed.rt_h() * astroBody1.mass / astroBody2.mass;
+   
+            astroBody1.speed.assignVector( disVecNormalized.new_mul(astroBody1.speed.rt_h()) );
+            astroBody2.speed.assignVector( disVecNormalized.new_mul(astroBody2.speed.rt_h()).new_neg() );
+            
+        }
+
+    }    
     
-    function phyBounceWall(astroObj) {  // Collision detection and update frame
+    function phyBounceWall(astroObj) {  // Bounce off Canvas frame
         // Bounce off walls
         if(astroObj.pos.x + astroObj.speed.x < astroObj.rad || // left wall
            astroObj.pos.x + astroObj.speed.x > canvas.width-astroObj.rad) { // right wall
@@ -388,12 +419,12 @@ function applyForceTree(){ // old
            astroObj.pos.y + astroObj.speed.y > canvas.height-astroObj.rad) { // bottom wall
             astroObj.speed.flipY(); // vertical bounce
         }
-  }
+    }
     
     function phyUpdatePos(astroObj) {  // Collision detection and update frame
         // move astroObj to next frame
         astroObj.pos.add( astroObj.speed.new_mul(deltaTime) );
-  } 
+    }
     
 
 /*******                Event Listerners                     ******/
@@ -496,6 +527,12 @@ function applyForceTree(){ // old
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
             for(var j=0; j<i; j++) {
                 applySpring(solarSystem[j], solarSystem[i]);
+            }
+        }
+        
+        for(var i=1; i< solarSystem.length; i++) { //O(N^2)
+            for(var j=0; j<i; j++) {
+                phyCollision(solarSystem[j], solarSystem[i]);
             }
         }
 
