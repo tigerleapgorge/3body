@@ -12,7 +12,7 @@
 
 <body style="background-color:grey">
 
-<canvas id="myCanvas" width="1000" height="1000"></canvas>
+<canvas id="myCanvas" width="900" height="900"></canvas>
 
 <script>
     var canvas = document.getElementById("myCanvas");
@@ -20,19 +20,15 @@
 
     var posTextUpperRight = new Vector(canvas.width-65, 20);
     var posTextUpperLeft = new Vector(8, 20);
-    
+
     //var dt = 0.1; // Delta Time
     var deltaTime = 1;  // Time Step
     var gravationalConstant = 0.001;
-    
-    
+
     var spring_constant = 25;
     var spring_length = 50;
     var charge_constant = 100;
-    
-    
-    var ballPos   = new Vector(myCanvas.width/2, myCanvas.height/2)
-    var ballSpeed = new Vector(-1, 5)
+
     var ballRadius = 10;
 
     var paddleWidth = 150;
@@ -61,6 +57,7 @@
 // charles - humble beginning
     
 // Vector Math
+// vec lib
     // https://github.com/maxkueng/victor/blob/master/index.js
     function Vector (x, y) {
         if (!(this instanceof Vector)) { // dont need new
@@ -74,9 +71,14 @@
 		return new Vector(10.0 * (Math.random() - 0.5), 10.0 * (Math.random() - 0.5));
 	};
 
-	Vector.prototype.set = function(new_x, new_y) {
+	Vector.prototype.assignScalar = function(new_x, new_y) {
 		this.x = new_x;
         this.y = new_y;
+	};
+
+	Vector.prototype.assignVector = function(Vec1) {
+		this.x = Vec1.x;
+        this.y = Vec1.y;
 	};
     
 	Vector.prototype.add = function(inVec) { // add vec to self
@@ -103,12 +105,15 @@
 	};
     
 	Vector.prototype.new_mul = function(n) {
-        var new_vec = new Vector(this.x * n, this.y * n);
-		return new_vec;
+        return new Vector(this.x * n, this.y * n);
 	};
 	Vector.prototype.div = function(n) {
 		this.x = this.x / n;
         this.y = this.y / n;
+	};
+
+    Vector.prototype.new_div = function(n) {
+		return new Vector(this.x / n, this.y / n);
 	};
     
 	Vector.prototype.inverse = function() {
@@ -162,14 +167,11 @@
         this.pos = pos || new Vector(x,y);
         this.name = name || "blank";
     }
-
     
     var myNode1 = new Vector( canvas.width/2 , canvas.height/2 );
     var myNode2 = new Vector( canvas.width/2+30 , canvas.height/2 );
 
     var ygg = []; // World Tree - is now a list of nodes
-    //ygg.push(ballPos);
-    ygg[0] = ballPos
     ygg.push(myNode1);
     ygg.push(myNode2);
     
@@ -187,34 +189,25 @@
     
 // physics
 
-/*    
-function applyChargeForceNode(node1, node2){
-    var x_dist = node2.x - node1.x
-    node2.x += charge_constant/(x_dist * x_dist + 0.1);
-}
-*/
-
-function applySpringForceNode(node1, node2){
+function applySpringForceNode(node1, node2){ // old
     var x_dist = node2.x - node1.x
     node2.x += (spring_length-x_dist)/spring_constant;
 }
     
     
-function applyVectorNode(vec1, node1){
+function applyVectorNode(vec1, node1){ // old
     node1.add(vec1);
 }
 
-function applyForceNode(force, node){
+function applyForceNode(force, node){ // old
     node.x += force;
 }
-function applyForceTree(){
-
+function applyForceTree(){ // old
     for(var i = 0; i< ygg.length-1; i++){
         applySpringForceNode(ygg[i], ygg[i+1]);
-
     }
 }
-    
+
 // 3 body 
     var Sun = {
         mass: 50000,
@@ -245,32 +238,32 @@ function applyForceTree(){
     };
  // need to figure out closure    
     function newRock(){
-    var myRock = {
-        mass: 500,
-        rad: 20,
-        pos: new Vector(myCanvas.width/2+245, myCanvas.height/2),
-        speed: new Vector(0, 6.1)
-    };
+        var myRock = {
+            mass: 500,
+            rad: 50,
+            pos: new Vector(myCanvas.width/2+245, myCanvas.height/2),
+            speed: new Vector(0, 6.1)
+        };
         return myRock;
     }
     function newObj(){
-        this.mass = 20000;
+        this.myType = "Atom";
+        this.mass = 20;
         this.rad = 25;
         this.pos = new Vector(myCanvas.width/2+250, myCanvas.height/2);
         this.speed = new Vector(0, 11);
         return this;
     };
 
-    //solarSystem = [Sun, Earth, Moon];
     solarSystem = [];
-    //solarSystem.push(new newRock());
-    //solarSystem.push(new newRock());
+
     solarSystem.push(Earth);
     solarSystem.push(Moon);
     solarSystem.push(Sun);
     solarSystem.push(newRock());
+    solarSystem.push(newObj());
     
-// Draw a single object in the Solar System
+    // Draw a single object in the Solar System
     function drawObj(astroObj) {
         if (astroObj.mass < 100) {
             drawMoon(astroObj);
@@ -279,7 +272,11 @@ function applyForceTree(){
         } else  {
             drawStar(astroObj);
         }
+        if (astroObj.myType){
+            drawText(astroObj.myType, astroObj.pos)
+        }
 
+            // Different color depending on the mass of the object
             function drawStar(astroObj){
                 ctx.beginPath();
                 ctx.arc(astroObj.pos.x, astroObj.pos.y, astroObj.rad, 0, Math.PI*2);
@@ -305,7 +302,7 @@ function applyForceTree(){
             }
     }
 
-    
+
 // Graphics
     function drawRect(posVector, width, height){
         ctx.beginPath();
@@ -325,7 +322,7 @@ function applyForceTree(){
     
     function drawText(myStr, posVector){
         ctx.font = "16px Arial";
-        ctx.fillStyle = "#0095DD";
+        ctx.fillStyle = "rgba(221, 0, 0, 0.92)";
         ctx.fillText(myStr, posVector.x, posVector.y);
     }
 
@@ -350,17 +347,20 @@ function applyForceTree(){
 
 // Physics
     function applyGravity(astroBody1, astroBody2){
+        // Formula: F1 = G (M1 M2) / (distance squared)
+        //          a1 = G    (M2) / (distance squared)
+        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
+        var distanceSquaredScalar= (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
+
         var numerator1 = gravationalConstant * astroBody2.mass;
         var numerator2 = gravationalConstant * astroBody1.mass;
-        var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
-        var absDisSquared = (distanceVec.x * distanceVec.x + distanceVec.y * distanceVec.y);
-        var acc1 = new Vector(numerator1*distanceVec.x/(absDisSquared+1), numerator1*distanceVec.y/(absDisSquared+1));
-        var acc2 = new Vector(numerator2*distanceVec.x/(absDisSquared+1), numerator2*distanceVec.y/(absDisSquared+1));
-        
-        astroBody2.speed.add(acc2.new_mul(deltaTime) );
-        astroBody1.speed.add(negVector(acc1.new_mul(deltaTime)) );
+
+        var acc1 = distanceVec.new_mul(numerator1).new_div(distanceSquaredScalar+1);
+        var acc2 = distanceVec.new_mul(numerator2).new_div(distanceSquaredScalar+1);
+
+        astroBody2.speed.add(acc2.new_mul(deltaTime));
+        astroBody1.speed.sub(acc1.new_mul(deltaTime));
     }
-    
     
     function applySpring(astroBody1, astroBody2){
         var distanceVec = subVector(astroBody1.pos, astroBody2.pos);
@@ -371,19 +371,15 @@ function applyForceTree(){
         // aim for 0.001
         //var acc = new Vector(springDelta * distanceVec.x, springDelta * distanceVec.y);
         var acc = distanceVec.new_mul(springDelta);
-        console.log( springDelta ); 
+        //console.log( springDelta ); 
         
         astroBody2.speed.sub(acc);
         astroBody1.speed.add(acc);
-        
-        
     }
     
     
-    function astroPhysics(astroObj) {  // Collision detection and update frame
-        
+    function phyBounceWall(astroObj) {  // Collision detection and update frame
         // Bounce off walls
-        
         if(astroObj.pos.x + astroObj.speed.x < astroObj.rad || // left wall
            astroObj.pos.x + astroObj.speed.x > canvas.width-astroObj.rad) { // right wall
             astroObj.speed.flipX(); // horzontal bounce
@@ -392,27 +388,13 @@ function applyForceTree(){
            astroObj.pos.y + astroObj.speed.y > canvas.height-astroObj.rad) { // bottom wall
             astroObj.speed.flipY(); // vertical bounce
         }
-        
-
-        /*
-        // Astroid style - comes out of the other side
-        if(astroObj.pos.x < 0) { // left wall
-            astroObj.pos.x += canvas.width;
-        }
-        if(astroObj.pos.x > canvas.width) { // right wall
-            astroObj.pos.x -= canvas.width;
-        }
-        if(astroObj.pos.y < 0) { // top wall
-            astroObj.pos.y += canvas.height;
-        }
-        if(astroObj.pos.y > canvas.height) { // bottom wall
-            astroObj.pos.y -= canvas.height;
-        }
-        */
-
+  }
+    
+    function phyUpdatePos(astroObj) {  // Collision detection and update frame
         // move astroObj to next frame
         astroObj.pos.add( astroObj.speed.new_mul(deltaTime) );
-  }
+  } 
+    
 
 /*******                Event Listerners                     ******/
     document.addEventListener("keypress", keyPressHandler, false);
@@ -458,13 +440,15 @@ function applyForceTree(){
             
         }
         else if(e.keyCode >= 48 && e.keyCode <= 57) { // 0 - 9
-            if(e.shiftKey){
+            if(e.shiftKey && e.keyCode == 57){ // "(" open paren
                 pushNode();  // it works!
             }
         }
         else if(e.keyCode >= 65 && e.keyCode <= 90) { // a - z
             
             solarSystem.push(newRock());
+        }else{
+            console.log("Unknown keycode", e.keyCode);
         }
     }
 
@@ -493,15 +477,16 @@ function applyForceTree(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
-/****************   Game Loop   *****************/
+// Main Loop aka Game Loop
     function drawAll(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        
         for(var i=0; i< solarSystem.length; i++){
             drawObj(solarSystem[i]);
-            astroPhysics(solarSystem[i]);
+            phyBounceWall(solarSystem[i]);
+            phyUpdatePos(solarSystem[i]);
         }
-
+        
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
             for(var j=0; j<i; j++) {
                 applyGravity(solarSystem[j], solarSystem[i]);
@@ -513,7 +498,7 @@ function applyForceTree(){
                 applySpring(solarSystem[j], solarSystem[i]);
             }
         }
-        
+
         drawTree(); // real
         applyForceTree(); // real
         
