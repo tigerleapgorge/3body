@@ -6,18 +6,30 @@
     <title>Balls 1</title>
     <style>
     	* { padding: 0; margin: 0; }
-    	canvas { background: #111; display: block; margin: 0 auto; }
+    	canvas { 
+            background: #111; 
+            display: block; 
+            margin-top: 0px; 
+            margin-left: 0px;
+            align-content: left;
+        }
     </style>
 </head>
 
 <body style="background-color:grey">
-
-<canvas id="myCanvas" width="900" height="900"></canvas>
-
+<div id="main">
+    <canvas id="myCanvas" width="900" height="900"></canvas>
+</div>
 <script>
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
 
+    var screenWidth = canvas.width;
+    var screenHeight = canvas.height;
+    
+    var worldWidth = screenWidth;   // currently the same,
+    var worldHeight = screenHeight; // may not always be the case
+    
     var posTextUpperRight = new Vector(canvas.width-65, 20);
     var posTextUpperLeft = new Vector(8, 20);
 
