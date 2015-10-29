@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Force-directed Abstract Syntax Tree interpreter</title>
+    <title>Balls 1</title>
     <style>
     	* { padding: 0; margin: 0; }
     	canvas { 
@@ -38,7 +38,7 @@
     var gravationalConstant = 0.001;
 
     var spring_constant = 25;
-    var spring_length = 50;
+    var spring_length = 120;
     var charge_constant = 100;
 
     var ballRadius = 10;
@@ -56,6 +56,8 @@
 
 	var score = 0;
     var lives = 3;
+    
+    var currNode;
     
     function drawScore() {
         drawText("Score: "+score, posTextUpperLeft)
@@ -236,33 +238,16 @@
 
 //data structure
 // 3 body 
-    var Sun = {
+    var firstAtom = {
         mass: 50000,
         rad: 20,
         pos: new Vector(myCanvas.width/2, myCanvas.height/2),
         speed: new Vector(0, 0)
     };
-
-    var Earth = {
-        mass: 100,
-        rad: 15,
-        pos: new Vector(myCanvas.width/2+200, myCanvas.height/2),
-        speed: new Vector(0, 6)
-    };    
-
-    var Moon = {
-        mass: 50,
-        rad: 8,
-        pos: new Vector(myCanvas.width/2+230, myCanvas.height/2),
-        speed: new Vector(0, 6.1)
-    };
     
-    var Rock = {
-        mass: 500,
-        rad: 20,
-        pos: new Vector(myCanvas.width/2+230, myCanvas.height/2),
-        speed: new Vector(0, 6.1)
-    };
+    var prevAtom = firstAtom;
+    var currAtom = firstAtom;
+
  // need to figure out closure    
     function newRock(){
         var myRock = {
@@ -282,15 +267,30 @@
         this.mass = 20;
         this.rad = 20;
         this.pos = new Vector(myCanvas.width/2+250, myCanvas.height/2);
-        this.speed = new Vector(0, -11);
+        this.speed = new Vector(0, 0);
         return this;
     };
 
+    
+    function appendAtom(){
+        var myAtom = {
+            text : "Atom",
+            mass : 20,
+            rad : 20,
+            pos : currAtom.pos.new_add(deltaRightVector),
+            speed : new Vector(0, 0)
+        }
+        prevAtom = currAtom;
+        currAtom = myAtom;
+        return myAtom;
+    };
+    
     solarSystem = [];
 
-    solarSystem.push(Earth);
-    solarSystem.push(Moon);
-    solarSystem.push(Sun);
+    solarSystem.push(firstAtom);
+    solarSystem.push(appendAtom());
+    
+    
     //solarSystem.push(newRock());
     //solarSystem.push(newObj());
     
@@ -303,8 +303,8 @@
         } else  {
             drawStar(astroObj);
         }
-        if (astroObj.myType){
-            drawText(astroObj.myType, astroObj.pos)
+        if (astroObj.text){
+            drawText(astroObj.text, astroObj.pos)
         }
 
             // Different color depending on the mass of the object
@@ -491,7 +491,9 @@
                 solarSystem.push( newObj()); // need new for seperate instance
         }
         else if(e.keyCode == 32) { // Space
-            pushNode();  // it works!
+            //solarSystem.push( newObj())
+            solarSystem.push( appendAtom());
+            
         }
         else if(e.keyCode == 17) { // Ctrl
             
@@ -504,16 +506,14 @@
         }
         else if(e.keyCode == 112) { // F1 - help page
             
-        }
-        else if(e.keyCode >= 48 && e.keyCode <= 57) { // 0 - 9
+        } else if(e.keyCode >= 48 && e.keyCode <= 57) { // 0 - 9
             if(e.shiftKey && e.keyCode == 57){ // "(" open paren
                 pushNode();  // it works!
             }
         }
         else if(e.keyCode >= 65 && e.keyCode <= 90) { // a - z
-            
-            
-        }else{
+            currAtom.text = currAtom.text.concat( String.fromCharCode(e.keyCode) );
+        } else {
             console.log("Unknown keycode", e.keyCode);
         }
     }
@@ -552,17 +552,15 @@
             phyBounceWall(solarSystem[i]);
             phyUpdatePos(solarSystem[i]);
         }
-        
+        /*
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
             for(var j=0; j<i; j++) {
                 applyAntiGravity(solarSystem[j], solarSystem[i]);
             }
         }
-        
+        */
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
-            for(var j=0; j<i; j++) {
-                applySpring(solarSystem[j], solarSystem[i]);
-            }
+            applySpring(solarSystem[i-1], solarSystem[i]);
         }
         
         for(var i=1; i< solarSystem.length; i++) { //O(N^2)
@@ -570,12 +568,6 @@
                 phyCollision(solarSystem[j], solarSystem[i]);
             }
         }
-
-        drawTree(); // real
-        applyForceTree(); // real
-        
-        drawPaddle(); // test mouse for now
-        movePaddle();
         
         drawLives();
 		drawScore();
@@ -585,7 +577,6 @@
     
  //setInterval(drawAll, 16);  // run faster for debugging
  drawAll();
-
 
 </script>
 
