@@ -209,6 +209,7 @@
     
 
     var deltaRightVector = new Vector(20,0);
+    var deltaDownVector = new Vector(0,20);
     
     function pushNode(){
         var newNode =  genVadd(ygg[ygg.length-1],deltaRightVector);
@@ -285,6 +286,22 @@
         return myAtom;
     };
     
+    function appendExpr(){
+        var myAtom = {
+            text : "Atom",
+            mass : 33,
+            rad : 20,
+            pos : currAtom.pos.new_add(deltaRightVector),
+            speed : new Vector(0, 0),
+        }
+        myAtom.subExpr = [];
+        myAtom.subExpr[0]= appendAtom();
+        myAtom.subExpr[0].pos.add(deltaDownVector);
+        prevAtom = currAtom;
+        currAtom = myAtom;
+        return myAtom;
+    };
+
     solarSystem = [];
 
     solarSystem.push(firstAtom);
@@ -296,6 +313,7 @@
     
     // Draw a single object in the Solar System
     function drawObj(astroObj) {
+        console.log("about to draw", astroObj);
         if (astroObj.mass < 100) {
             drawMoon(astroObj);
         } else if (astroObj.mass >= 100 && astroObj.mass < 1000) {
@@ -492,7 +510,7 @@
         }
         else if(e.keyCode == 32) { // Space
             //solarSystem.push( newObj())
-            solarSystem.push( appendAtom());
+            solarSystem.push( appendAtom() );
             
         }
         else if(e.keyCode == 17) { // Ctrl
@@ -508,7 +526,7 @@
             
         } else if(e.keyCode >= 48 && e.keyCode <= 57) { // 0 - 9
             if(e.shiftKey && e.keyCode == 57){ // "(" open paren
-                pushNode();  // it works!
+                solarSystem.push( appendExpr() );
             }
         }
         else if(e.keyCode >= 65 && e.keyCode <= 90) { // a - z
@@ -546,9 +564,20 @@
 // Main Loop aka Game Loop
     function drawAll(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         for(var i=0; i< solarSystem.length; i++){
             drawObj(solarSystem[i]);
+            if(solarSystem[i].subExpr) {
+                for(var j=0; solarSystem[i].subExpr.length; j++) {
+                    console.log("par i", solarSystem[i]);
+                    console.log("sub j", solarSystem[i].subExpr[j]);
+                    drawObj(solarSystem[i].subExpr[0]);
+                }
+            
+            }
+        }
+        
+        for(var i=0; i< solarSystem.length; i++){
             phyBounceWall(solarSystem[i]);
             phyUpdatePos(solarSystem[i]);
         }
